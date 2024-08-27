@@ -12,3 +12,6 @@ staticfiles/
 venv/
 entorno_virtual/
 docker-compose.override.yml
+
+#database
+database/
