@@ -15,3 +15,6 @@ docker-compose.override.yml
 
 #database
 database/
+
+#.txt prueba
+cves_data.txt
