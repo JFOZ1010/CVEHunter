@@ -4,20 +4,16 @@ from rest_framework import status
 
 from .models import CVE, Vendor, Product
 from .serializers import CVESerializer, VendorSerializer, ProductSerializer
-from .cve_methods import fetch_cves #, scan_url_for_cves
+from .cve_methods import fetch_recent_cves
+#, scan_url_for_cves
 
 
 @api_view(['GET'])
 def cve_list_view(request):
-    cve_data = fetch_cves()
-    if not cve_data:
-        return Response({'error': 'Error al obtener CVEs'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    cves = CVE.objects.all()
+    serializer = CVESerializer(cves, many=True)
+    return Response(serializer.data)
     
-    # Guarda los CVEs en la base de datos
-    #for cve_dict in cve_data:
-        #CVE.objects.update_or_create(cve_id=cve_dict['cve_id'], defaults=cve_dict)
-    
-    return Response(cve_data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def cve_detail_view(request, pk):

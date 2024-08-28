@@ -18,3 +18,9 @@ database/
 
 #.txt prueba
 cves_data.txt
+
+#api cache migrations
+cve_hunter/migrations/__pycache__/
+
+#DS store
+.DS_Store

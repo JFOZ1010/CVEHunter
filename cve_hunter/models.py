@@ -5,12 +5,7 @@ class CVE(models.Model):
     cve_id = models.CharField(max_length=20, unique=True)
     description = models.TextField()
     published_date = models.DateField()
-    severity = models.CharField(max_length=10, choices=[
-        ('LOW', 'Low'),
-        ('MEDIUM', 'Medium'),
-        ('HIGH', 'High'),
-        ('CRITICAL', 'Critical'),
-    ])
+    severity = models.CharField(max_length=50)
 
     def __str__(self):
         return self.cve_id

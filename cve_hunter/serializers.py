@@ -4,7 +4,7 @@ from .models import CVE, Vendor, Product
 class CVESerializer(serializers.ModelSerializer):
     class Meta:
         model = CVE
-        fields = '__all__'
+        fields = ['cve_id', 'description', 'published_date', 'severity']
 
 class VendorSerializer(serializers.ModelSerializer):
     class Meta:
