@@ -2,11 +2,15 @@ import requests
 import lzma
 import json
 import os
+import time
 from datetime import datetime 
 
 #from django.core.exceptions import ObjectDoesNotExist
 from .models import CVE
 from django.utils.dateparse import parse_datetime
+from django.http import JsonResponse
+
+from zapv2 import ZAPv2
 
 
 # URL base de GitHub Releases
@@ -106,3 +110,58 @@ def fetch_recent_cves():
 
 # Llamada a la función para ejecutar el proceso
 fetch_recent_cves()
+
+def scan_url(url_target, zap_api_key):
+    # Configurar el proxy para OWASP ZAP
+    proxies = {'http': 'http://localhost:8080', 'https': 'http://localhost:8080'}
+    
+    # Inicializar OWASP ZAP con la clave API y el proxy
+    zap = ZAPv2(apikey=zap_api_key, proxies=proxies)
+
+    try:
+        # Iniciar el escaneo en la URL proporcionada
+        zap.urlopen(url_target)
+        scan_id = zap.spider.scan(url_target)
+
+        # Esperar a que el escaneo termine
+        while int(zap.spider.status(scan_id)) < 100:
+            print(f"Progreso del escaneo: {zap.spider.status(scan_id)}%")
+            time.sleep(5)  # Esperar 5 segundos entre verificaciones
+
+        # Obtener resultados del escaneo
+        alerts = zap.core.alerts(baseurl=url_target)
+        
+        # Obtener detalles adicionales del escaneo
+        scan_details = {
+            'scan_id': scan_id,
+            'status': zap.spider.status(scan_id),
+            'total_alerts': len(alerts)
+        }
+
+        # Obtener todos los CVEs de la base de datos
+        cve_ids = set(CVE.objects.values_list('cve_id', flat=True))
+
+        # Filtrar alertas que contienen un cve_id en su descripción
+        matched_cves = [
+            {
+                'cve_id': cve_id,
+                'description': alert.get('description', ''),
+                'risk': alert.get('risk', 'Unknown'),
+                'url': alert.get('url', '')
+            }
+            for alert in alerts
+            for cve_id in cve_ids
+            if cve_id in alert.get('description', '')
+        ]
+
+        return {
+            'scan_details': scan_details,
+            'matched_cves': matched_cves
+        }
+
+    except Exception as e:
+        print(f"Error durante el escaneo: {e}")
+        return {
+            'scan_details': {},
+            'matched_cves': []
+        }
